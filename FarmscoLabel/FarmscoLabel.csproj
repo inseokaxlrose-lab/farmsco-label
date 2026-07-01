@@ -26,4 +26,12 @@
          위의 UseWindowsForms=true 설정으로 자동 포함되므로 별도 패키지 참조가 필요 없습니다. -->
   </ItemGroup>
 
+  <!-- UseWindowsForms=true + ImplicitUsings 조합에서 WinForms 네임스페이스가 자동 포함되어
+       WPF 타입과 이름이 겹친다. 이 앱은 WPF 앱이므로 전역 별칭으로 WPF 쪽을 못박는다. -->
+  <ItemGroup>
+    <Using Include="System.Windows.MessageBox" Alias="MessageBox" />
+    <Using Include="Microsoft.Win32.OpenFileDialog" Alias="OpenFileDialog" />
+    <Using Include="Microsoft.Win32.SaveFileDialog" Alias="SaveFileDialog" />
+  </ItemGroup>
+
 </Project>
