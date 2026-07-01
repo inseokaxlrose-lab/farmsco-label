@@ -33,6 +33,17 @@ namespace FarmscoLabel
 
             // 프린터 목록 채우기
             LoadPrinters();
+
+            // 상태표시줄에 프로그램 버전 표시 (csproj의 <Version> 값과 자동 일치)
+            ShowVersion();
+        }
+
+        // 어셈블리 버전을 읽어 상태표시줄 오른쪽에 "v1.0.0" 형태로 표시한다.
+        private void ShowVersion()
+        {
+            var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            if (ver != null)
+                TxtVersion.Text = $"v{ver.Major}.{ver.Minor}.{ver.Build}";
         }
 
         // 설치된 프린터를 콤보박스에 채운다.

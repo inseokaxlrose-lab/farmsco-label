@@ -167,7 +167,13 @@
 
         <!-- ── 4. 상태표시줄 ── -->
         <Border Grid.Row="4" Background="#111827" CornerRadius="4" Margin="0,8,0,0" Padding="10,5">
-            <TextBlock x:Name="TxtStatus" Foreground="White" Text="엑셀 파일을 업로드하세요."/>
+            <DockPanel>
+                <!-- 오른쪽 고정: 프로그램 버전 -->
+                <TextBlock x:Name="TxtVersion" DockPanel.Dock="Right" Foreground="#9CA3AF"
+                           Margin="12,0,0,0" Text="v1.0.0"/>
+                <!-- 왼쪽: 상태 메시지 (내용이 바뀜) -->
+                <TextBlock x:Name="TxtStatus" Foreground="White" Text="엑셀 파일을 업로드하세요."/>
+            </DockPanel>
         </Border>
 
         <!-- ── 로딩 오버레이: 엑셀을 불러오는 동안 화면 전체를 덮고 진행바 표시 ── -->
