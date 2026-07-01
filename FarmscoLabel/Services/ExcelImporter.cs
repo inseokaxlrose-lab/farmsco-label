@@ -7,13 +7,26 @@ namespace FarmscoLabel.Services
     public static class ExcelImporter
     {
         // 엑셀 파일 경로를 받아 데이터 목록을 돌려준다.
-        public static List<DeliveryRow> Import(string filePath)
+        // progress: 0~100 사이의 진행률을 보고받고 싶을 때 전달(선택).
+        public static List<DeliveryRow> Import(string filePath, IProgress<int>? progress = null)
         {
             var rows = new List<DeliveryRow>();
 
             // 엑셀 파일 열기 (using: 다 쓰면 자동으로 파일을 닫아줌)
             using var workbook = new XLWorkbook(filePath);
-            var ws = workbook.Worksheet(1); // 첫 번째 시트 사용
+
+            // "주문현황" 탭을 찾는다. 없으면 첫 번째 시트를 사용.
+            IXLWorksheet? ws = null;
+            foreach (var sheet in workbook.Worksheets)
+            {
+                string name = (sheet.Name ?? "").Replace(" ", "").Trim();
+                if (name.Contains("주문현황"))
+                {
+                    ws = sheet;
+                    break;
+                }
+            }
+            ws ??= workbook.Worksheet(1);
 
             // 실제로 값이 있는 영역만 가져오기
             var range = ws.RangeUsed();
@@ -23,9 +36,26 @@ namespace FarmscoLabel.Services
             var headerRow = range.FirstRow();
             var map = BuildColumnMap(headerRow);
 
+            // 진행률 계산용: 데이터 줄 수(헤더 제외)
+            int totalRows = Math.Max(1, range.RowCount() - 1);
+            int done = 0;
+            int lastReported = -1;
+
             // 헤더 다음 줄부터 끝까지 한 줄씩 읽는다.
             foreach (var row in range.Rows().Skip(1))
             {
+                // 진행률 보고 (매 줄마다 UI로 보내면 과하니 % 값이 바뀔 때만 보고)
+                done++;
+                if (progress != null)
+                {
+                    int percent = (int)(done * 100L / totalRows);
+                    if (percent != lastReported)
+                    {
+                        lastReported = percent;
+                        progress.Report(percent);
+                    }
+                }
+
                 var item = new DeliveryRow
                 {
                     ShipperName = GetText(row, map, "ShipperName"),

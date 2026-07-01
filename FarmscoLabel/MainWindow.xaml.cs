@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Data;
 using FarmscoLabel.Models;
@@ -50,18 +51,54 @@ namespace FarmscoLabel
         }
 
         // ── 엑셀 업로드 ──
-        private void BtnUpload_Click(object sender, RoutedEventArgs e)
+        private async void BtnUpload_Click(object sender, RoutedEventArgs e)
         {
             var dlg = new OpenFileDialog
             {
                 Title = "엑셀 파일 선택",
                 Filter = "엑셀 파일 (*.xlsx)|*.xlsx|모든 파일 (*.*)|*.*"
             };
+
+            // 최근에 불러온 폴더가 있으면 그 폴더를 열어준다 (폴더가 아직 존재할 때만)
+            if (!string.IsNullOrWhiteSpace(_settings.LastImportFolder) &&
+                Directory.Exists(_settings.LastImportFolder))
+            {
+                dlg.InitialDirectory = _settings.LastImportFolder;
+            }
+
             if (dlg.ShowDialog() != true) return;
+
+            string path = dlg.FileName;
+
+            // 이번에 고른 파일의 폴더를 '최근 폴더'로 기억한다
+            try
+            {
+                string? folder = Path.GetDirectoryName(path);
+                if (!string.IsNullOrWhiteSpace(folder))
+                {
+                    _settings.LastImportFolder = folder;
+                    _settings.Save();
+                }
+            }
+            catch { /* 폴더 기억 실패는 무시 */ }
+
+            // 로딩 오버레이 표시 + 진행바 초기화
+            LoadingBar.Value = 0;
+            TxtLoading.Text = "엑셀을 여는 중입니다...";
+            LoadingOverlay.Visibility = Visibility.Visible;
+            BtnUpload.IsEnabled = false;
+
+            // 백그라운드에서 읽은 진행률을 UI로 전달하는 통로
+            var progress = new Progress<int>(percent =>
+            {
+                LoadingBar.Value = percent;
+                TxtLoading.Text = $"엑셀을 불러오는 중입니다... {percent}%";
+            });
 
             try
             {
-                var imported = ExcelImporter.Import(dlg.FileName);
+                // 무거운 읽기 작업은 백그라운드 스레드에서 실행 (화면 멈춤 방지)
+                var imported = await Task.Run(() => ExcelImporter.Import(path, progress));
 
                 _rows.Clear();
                 foreach (var r in imported)
@@ -77,6 +114,11 @@ namespace FarmscoLabel
             {
                 MessageBox.Show("엑셀을 읽는 중 문제가 발생했어요.\n\n" + ex.Message,
                     "업로드 오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+                BtnUpload.IsEnabled = true;
             }
         }
 
@@ -117,8 +159,12 @@ namespace FarmscoLabel
             foreach (var l in labels)
                 _detailLabels.Add(l);
 
+            // 박스(꽉 찬) / 낱개(잔량) 장수 계산
+            int boxCnt = labels.Count(l => l.IsFullBox);
+            int looseCnt = labels.Count(l => !l.IsFullBox);
+
             TxtDetailInfo.Text =
-                $"[{row.DeliveryPlace}] {row.ItemName}  ·  총수량 {row.Quantity} / 입수 {row.BoxUnitQty}  →  박스 {row.BoxCount}장";
+                $"[{row.DeliveryPlace}] {row.ItemName}  ·  박스 {boxCnt}장 / 낱개 {looseCnt}장";
         }
 
         // ── 선택한 행들만 출력 ──
@@ -148,13 +194,28 @@ namespace FarmscoLabel
         }
 
         // 실제 인쇄 처리 (공통)
-        private void PrintRows(List<DeliveryRow> rows)
+        private async void PrintRows(List<DeliveryRow> rows)
         {
-            // 라벨로 펼치기
-            var labels = NumberingEngine.ExpandMany(rows, _settings.ShippingSource);
+            // 출고 구분 필터 확인 (둘 다 꺼져 있으면 출력할 게 없음)
+            bool includeBox = ChkBox.IsChecked == true;
+            bool includeLoose = ChkLoose.IsChecked == true;
+            if (!includeBox && !includeLoose)
+            {
+                MessageBox.Show("‘박스출고’ 또는 ‘낱개출고’ 중 하나 이상을 선택하세요.", "안내",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // 라벨로 펼친 뒤 출고 구분 필터 적용
+            var labels = NumberingEngine.ExpandMany(rows, _settings.ShippingSource)
+                .Where(l => l.IsFullBox ? includeBox : includeLoose)
+                // 박스를 먼저, 낱개를 나중에 출력 (OrderBy는 안정 정렬 → 원래 순서 유지)
+                .OrderByDescending(l => l.IsFullBox)
+                .ToList();
+
             if (labels.Count == 0)
             {
-                MessageBox.Show("인쇄할 라벨이 없습니다. (수량을 확인하세요)", "안내",
+                MessageBox.Show("인쇄할 라벨이 없습니다. (수량 또는 출고 구분 필터를 확인하세요)", "안내",
                     MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
@@ -168,28 +229,69 @@ namespace FarmscoLabel
                 return;
             }
 
-            // 인쇄 전 확인 (실수 방지)
-            var confirm = MessageBox.Show(
-                $"'{printer}' 프린터로 라벨 {labels.Count}장을 출력할까요?",
-                "출력 확인", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (confirm != MessageBoxResult.Yes) return;
+            // 프린터 선택 대화상자 표시 (프로그램에서 고른 프린터를 기본 선택으로 띄운다)
+            using var dlg = new System.Windows.Forms.PrintDialog
+            {
+                AllowSomePages = false,
+                AllowSelection = false,
+                AllowPrintToFile = false,
+                UseEXDialog = true,
+                PrinterSettings = new System.Drawing.Printing.PrinterSettings
+                {
+                    PrinterName = printer
+                }
+            };
+            if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+
+            // 대화상자에서 최종 선택된 프린터를 사용하고, 화면 목록에도 반영
+            printer = dlg.PrinterSettings.PrinterName;
+            if (CmbPrinter.Items.Contains(printer))
+                CmbPrinter.SelectedItem = printer;
+
+            // 출력 진행 오버레이 표시 + 진행바 초기화
+            int total = labels.Count;
+            LoadingBar.Value = 0;
+            TxtLoading.Text = $"출력 준비 중입니다... (0 / {total}장)";
+            LoadingOverlay.Visibility = Visibility.Visible;
+            SetPrintButtonsEnabled(false);
+
+            // 백그라운드에서 인쇄한 장수를 UI로 전달하는 통로
+            var progress = new Progress<int>(done =>
+            {
+                LoadingBar.Value = total == 0 ? 0 : done * 100.0 / total;
+                TxtLoading.Text = $"출력 중입니다... ({done} / {total}장)";
+            });
 
             try
             {
                 var printerService = new LabelPrinter(_settings);
-                printerService.Print(labels, printer);
+                // 인쇄는 화면을 멈추지 않도록 백그라운드 스레드에서 실행
+                await Task.Run(() => printerService.Print(labels, printer, progress));
 
                 // 선택한 프린터를 설정에 저장
                 _settings.PrinterName = printer;
                 _settings.Save();
 
-                TxtStatus.Text = $"출력 완료: 라벨 {labels.Count}장 ({printer})";
+                TxtStatus.Text = $"출력 완료: 라벨 {total}장 ({printer})";
             }
             catch (Exception ex)
             {
                 MessageBox.Show("인쇄 중 문제가 발생했어요.\n\n" + ex.Message,
                     "인쇄 오류", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            finally
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+                SetPrintButtonsEnabled(true);
+            }
+        }
+
+        // 인쇄 중 출력 버튼들을 잠갔다 풀었다 한다.
+        private void SetPrintButtonsEnabled(bool enabled)
+        {
+            BtnPrintSelected.IsEnabled = enabled;
+            BtnPrintAll.IsEnabled = enabled;
+            BtnUpload.IsEnabled = enabled;
         }
 
         // ── 설정 창 열기 ──
@@ -209,9 +311,21 @@ namespace FarmscoLabel
         private void UpdateStatus()
         {
             int total = _rows.Count;
-            int shown = _view.Cast<DeliveryRow>().Count();
-            int boxSum = _view.Cast<DeliveryRow>().Sum(r => r.BoxCount);
-            TxtStatus.Text = $"전체 {total}건 · 필터 표시 {shown}건 · 출력 예정 라벨 {boxSum}장";
+            var visible = _view.Cast<DeliveryRow>().ToList();
+            int shown = visible.Count;
+
+            // 보이는 행들을 라벨로 펼쳐 박스/낱개 개수를 센다
+            var labels = NumberingEngine.ExpandMany(visible, _settings.ShippingSource);
+            int boxCnt = labels.Count(l => l.IsFullBox);
+            int looseCnt = labels.Count(l => !l.IsFullBox);
+
+            // 현재 출고 구분 필터로 실제 출력될 장수 계산
+            bool includeBox = ChkBox?.IsChecked == true;
+            bool includeLoose = ChkLoose?.IsChecked == true;
+            int printCnt = (includeBox ? boxCnt : 0) + (includeLoose ? looseCnt : 0);
+
+            TxtStatus.Text =
+                $"전체 {total}건 · 필터 표시 {shown}건 · 박스 {boxCnt}장 / 낱개 {looseCnt}장 · 출력 예정 {printCnt}장";
         }
     }
 }

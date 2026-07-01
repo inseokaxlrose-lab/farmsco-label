@@ -15,3 +15,7 @@ installer/Output/
 *.suo
 Thumbs.db
 .DS_Store
+
+# 스크린샷/이미지 (비밀값 유출 방지)
+스크린샷*.png
+*.screenshot.png

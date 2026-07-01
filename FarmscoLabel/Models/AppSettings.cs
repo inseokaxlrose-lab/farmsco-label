@@ -28,6 +28,9 @@ namespace FarmscoLabel.Models
         // 사용할 프린터 이름 (Windows에 설치된 프린터 이름). 비어있으면 화면에서 선택.
         public string PrinterName { get; set; } = "";
 
+        // 마지막으로 엑셀을 불러온 폴더. 다음 업로드 시 이 폴더를 열어준다.
+        public string LastImportFolder { get; set; } = "";
+
         // 라벨(양식지) 크기 (mm). 100 x 120, 세로 방향.
         public double LabelWidthMm { get; set; } = 100;
         public double LabelHeightMm { get; set; } = 120;

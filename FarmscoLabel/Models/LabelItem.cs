@@ -20,7 +20,15 @@ namespace FarmscoLabel.Models
         public int CurrentBox { get; set; }  // 현재 순번 (예: 11)
         public int TotalBox { get; set; }    // 전체 박스 수 (예: 11)
 
+        // 이 라벨이 '꽉 찬 박스'인지 여부.
+        // true  = 입수량만큼 가득 찬 박스 → "박스"
+        // false = 입수량보다 적은 잔량 박스 → "낱개"
+        public bool IsFullBox { get; set; }
+
         // ── 화면/인쇄에서 쓰기 좋은 형태로 가공한 글자 ──
+
+        // 구분 칸: "박스" 또는 "낱개"
+        public string PackTypeText => IsFullBox ? "박스" : "낱개";
 
         // 수량 칸: "40 / 420" 처럼 표기
         public string QtyText => $"{BoxQty} / {TotalQty}";

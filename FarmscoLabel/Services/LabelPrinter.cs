@@ -24,7 +24,8 @@ namespace FarmscoLabel.Services
         }
 
         // 라벨 목록을 인쇄한다. printerName이 비어있으면 설정값/기본 프린터 사용.
-        public void Print(List<LabelItem> labels, string? printerName = null)
+        // progress: 지금까지 인쇄한 장수(1..총장수)를 보고받고 싶을 때 전달(선택).
+        public void Print(List<LabelItem> labels, string? printerName = null, IProgress<int>? progress = null)
         {
             if (labels == null || labels.Count == 0)
                 return;
@@ -65,6 +66,8 @@ namespace FarmscoLabel.Services
                 DrawLabel(g, labels[index]);
 
                 index++;
+                // 한 장 찍을 때마다 진행 상황 보고 (예: 3/120장)
+                progress?.Report(index);
                 // 아직 남은 라벨이 있으면 다음 페이지를 계속 인쇄
                 e.HasMorePages = index < labels.Count;
             };

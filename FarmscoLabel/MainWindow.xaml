@@ -1,9 +1,23 @@
 <Window x:Class="FarmscoLabel.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="팜스코 라벨 출력" Height="760" Width="1180"
+        Title="팜스코 라벨 출력" Height="760" Width="1340"
+        MinWidth="1340" MinHeight="600"
         WindowStartupLocation="CenterScreen"
         FontFamily="맑은 고딕" FontSize="13">
+
+    <!-- 공용 스타일: 컬럼명/셀 가운데 정렬 -->
+    <Window.Resources>
+        <!-- 모든 컬럼 '제목(헤더)'을 가운데 정렬 -->
+        <Style x:Key="CenterHeader" TargetType="DataGridColumnHeader">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+        <!-- 텍스트 컬럼의 '값'을 가운데 정렬 -->
+        <Style x:Key="CenterCell" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
 
     <!-- 화면을 세로로 4칸 나눔: 도구모음 / 표 / 구분선 / 상세 -->
     <Grid Margin="10">
@@ -35,6 +49,15 @@
 
                 <Separator Margin="10,0" Width="1"/>
 
+                <!-- 출고 구분 필터 (출력 시 적용): 박스출고 / 낱개출고 -->
+                <TextBlock Text="출고:" VerticalAlignment="Center" Margin="6,0,6,0" FontWeight="Bold"/>
+                <CheckBox x:Name="ChkBox" Content="박스출고" IsChecked="True" Margin="4,0"
+                          VerticalAlignment="Center" Click="Filter_Changed"/>
+                <CheckBox x:Name="ChkLoose" Content="낱개출고" IsChecked="True" Margin="4,0"
+                          VerticalAlignment="Center" Click="Filter_Changed"/>
+
+                <Separator Margin="10,0" Width="1"/>
+
                 <!-- 프린터 선택 -->
                 <TextBlock Text="프린터:" VerticalAlignment="Center" Margin="6,0,6,0" FontWeight="Bold"/>
                 <ComboBox x:Name="CmbPrinter" Width="200" VerticalAlignment="Center"/>
@@ -58,23 +81,38 @@
                   IsReadOnly="True" SelectionMode="Extended"
                   CanUserAddRows="False" HeadersVisibility="Column"
                   GridLinesVisibility="All" RowHeaderWidth="0"
+                  ColumnHeaderStyle="{StaticResource CenterHeader}"
                   SelectionChanged="GridMaster_SelectionChanged">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="화주명" Binding="{Binding ShipperName}" Width="90"/>
                 <DataGridTextColumn Header="납품처명" Binding="{Binding DeliveryPlace}" Width="150"/>
                 <DataGridTextColumn Header="배송센터" Binding="{Binding DeliveryCenter}" Width="120"/>
-                <DataGridTextColumn Header="요청일자" Binding="{Binding RequestDate}" Width="90"/>
+                <DataGridTextColumn Header="요청일자" Binding="{Binding RequestDate}" Width="90"
+                                    ElementStyle="{StaticResource CenterCell}"/>
                 <DataGridTextColumn Header="품목명" Binding="{Binding ItemName}" Width="*"/>
                 <DataGridTextColumn Header="보관유형" Binding="{Binding StorageTypeRaw}" Width="90"/>
-                <DataGridTextColumn Header="총수량" Binding="{Binding Quantity}" Width="70"/>
-                <DataGridTextColumn Header="입수수량" Binding="{Binding BoxUnitQty}" Width="70"/>
+                <DataGridTextColumn Header="총수량" Binding="{Binding Quantity}" Width="70"
+                                    ElementStyle="{StaticResource CenterCell}"/>
+                <DataGridTextColumn Header="입수수량" Binding="{Binding BoxUnitQty}" Width="70"
+                                    ElementStyle="{StaticResource CenterCell}"/>
                 <!-- 계산된 박스수량 컬럼 (강조) -->
-                <DataGridTextColumn Header="박스수량" Binding="{Binding BoxCount}" Width="80">
+                <DataGridTextColumn Header="박스수량" Binding="{Binding BoxCount}" Width="80"
+                                    ElementStyle="{StaticResource CenterCell}">
                     <DataGridTextColumn.CellStyle>
                         <Style TargetType="DataGridCell">
                             <Setter Property="FontWeight" Value="Bold"/>
                             <Setter Property="Background" Value="#FFF7D6"/>
+                            <!-- 선택해도 값이 안 보이지 않도록 글자색을 항상 검정으로 고정 -->
+                            <Setter Property="Foreground" Value="Black"/>
                             <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                            <Style.Triggers>
+                                <!-- 선택 시엔 조금 진한 노랑 배경 + 검정 글자로 강조 유지 -->
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#FFE08A"/>
+                                    <Setter Property="Foreground" Value="Black"/>
+                                </Trigger>
+                            </Style.Triggers>
                         </Style>
                     </DataGridTextColumn.CellStyle>
                 </DataGridTextColumn>
@@ -91,10 +129,34 @@
                        FontWeight="Bold" Text="행을 선택하면 박스별 라벨 목록이 여기에 표시됩니다."/>
             <DataGrid x:Name="GridDetail" AutoGenerateColumns="False" IsReadOnly="True"
                       CanUserAddRows="False" HeadersVisibility="Column"
-                      GridLinesVisibility="All" RowHeaderWidth="0">
+                      GridLinesVisibility="All" RowHeaderWidth="0"
+                      ColumnHeaderStyle="{StaticResource CenterHeader}">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="순번" Binding="{Binding SequenceText}" Width="80"/>
-                    <DataGridTextColumn Header="수량(박스/총)" Binding="{Binding QtyText}" Width="140"/>
+                    <!-- 박스 / 낱개 구분 (입수량만큼 꽉 차면 박스, 적으면 낱개) -->
+                    <DataGridTextColumn Header="구분" Binding="{Binding PackTypeText}" Width="60">
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <!-- 선택해도 글자가 안 보이지 않도록 검정으로 고정 -->
+                                <Setter Property="Foreground" Value="Black"/>
+                                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Style.Triggers>
+                                    <!-- 낱개는 눈에 띄게 배경색 강조 -->
+                                    <DataTrigger Binding="{Binding IsFullBox}" Value="False">
+                                        <Setter Property="Background" Value="#FFE1E1"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsFullBox}" Value="True">
+                                        <Setter Property="Background" Value="#E1F0FF"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="순번" Binding="{Binding SequenceText}" Width="80"
+                                        ElementStyle="{StaticResource CenterCell}"/>
+                    <DataGridTextColumn Header="수량(박스/총)" Binding="{Binding QtyText}" Width="140"
+                                        ElementStyle="{StaticResource CenterCell}"/>
                     <DataGridTextColumn Header="납품처명" Binding="{Binding DeliveryPlace}" Width="150"/>
                     <DataGridTextColumn Header="품목명" Binding="{Binding ItemName}" Width="*"/>
                     <DataGridTextColumn Header="보관유형" Binding="{Binding StorageTypeRaw}" Width="90"/>
@@ -106,6 +168,21 @@
         <!-- ── 4. 상태표시줄 ── -->
         <Border Grid.Row="4" Background="#111827" CornerRadius="4" Margin="0,8,0,0" Padding="10,5">
             <TextBlock x:Name="TxtStatus" Foreground="White" Text="엑셀 파일을 업로드하세요."/>
+        </Border>
+
+        <!-- ── 로딩 오버레이: 엑셀을 불러오는 동안 화면 전체를 덮고 진행바 표시 ── -->
+        <Border x:Name="LoadingOverlay" Grid.RowSpan="5" Background="#99000000"
+                Visibility="Collapsed" Panel.ZIndex="100">
+            <Border Background="White" CornerRadius="8" Padding="30,24"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel>
+                    <TextBlock x:Name="TxtLoading" Text="엑셀을 불러오는 중입니다..."
+                               FontSize="15" FontWeight="Bold" HorizontalAlignment="Center"
+                               Margin="0,0,0,12"/>
+                    <ProgressBar x:Name="LoadingBar" Width="320" Height="20"
+                                 Minimum="0" Maximum="100" Value="0"/>
+                </StackPanel>
+            </Border>
         </Border>
     </Grid>
 </Window>

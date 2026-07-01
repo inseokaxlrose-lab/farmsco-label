@@ -27,16 +27,16 @@ namespace FarmscoLabel.Services
             int full = total / unit;       // 꽉 찬 박스 개수
             int remain = total % unit;     // 마지막 잔량
 
-            // 1) 꽉 찬 박스들: 각 박스 수량 = unit, 순번 1/N ~ full/N
+            // 1) 꽉 찬 박스들: 각 박스 수량 = unit, 순번 1/N ~ full/N → "박스"
             for (int i = 1; i <= full; i++)
             {
-                result.Add(MakeLabel(row, shippingSource, total, unit, i, totalBox));
+                result.Add(MakeLabel(row, shippingSource, total, unit, i, totalBox, isFullBox: true));
             }
 
-            // 2) 잔량 박스: 마지막 1장, 박스 수량 = remain, 순번 = N/N
+            // 2) 잔량 박스: 마지막 1장, 박스 수량 = remain, 순번 = N/N → "낱개"
             if (remain > 0)
             {
-                result.Add(MakeLabel(row, shippingSource, total, remain, totalBox, totalBox));
+                result.Add(MakeLabel(row, shippingSource, total, remain, totalBox, totalBox, isFullBox: false));
             }
 
             return result;
@@ -54,7 +54,7 @@ namespace FarmscoLabel.Services
         // 라벨 1장 만들기 (값 채우기)
         private static LabelItem MakeLabel(
             DeliveryRow row, string shippingSource,
-            int totalQty, int boxQty, int currentBox, int totalBox)
+            int totalQty, int boxQty, int currentBox, int totalBox, bool isFullBox)
         {
             return new LabelItem
             {
@@ -64,13 +64,28 @@ namespace FarmscoLabel.Services
                 DeliveryPlace = row.DeliveryPlace,
                 RequestDate = row.RequestDate,
                 StorageTypeRaw = row.StorageTypeRaw,
-                ItemName = row.ItemName,   // 품목명 뒤 (숫자)=입수량, 원본 그대로 사용
+                ItemName = BuildItemName(row.ItemName, row.BoxUnitQty), // 품목명 뒤에 (입수량) 붙임
                 Remark = row.Remark,
                 TotalQty = totalQty,
                 BoxQty = boxQty,
                 CurrentBox = currentBox,
                 TotalBox = totalBox,
+                IsFullBox = isFullBox,
             };
+        }
+
+        // 품목명 뒤에 "(입수량)"을 붙인다.
+        // 예) "우유 500ml" + 입수 40 -> "우유 500ml (40)"
+        // 이미 "(40)"이 붙어 있으면 중복으로 붙이지 않는다.
+        private static string BuildItemName(string itemName, int boxUnitQty)
+        {
+            string name = (itemName ?? "").Trim();
+            if (boxUnitQty <= 0) return name;
+
+            string suffix = $"({boxUnitQty})";
+            if (name.Replace(" ", "").EndsWith(suffix)) return name; // 이미 붙어 있으면 그대로
+
+            return $"{name} {suffix}";
         }
     }
 }
