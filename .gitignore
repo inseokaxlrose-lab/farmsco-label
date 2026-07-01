@@ -1,0 +1,17 @@
+# .NET 빌드 산출물
+bin/
+obj/
+publish/
+
+# Visual Studio / Rider 사용자 설정
+.vs/
+.idea/
+*.user
+
+# Inno Setup 결과물
+installer/Output/
+
+# 기타
+*.suo
+Thumbs.db
+.DS_Store

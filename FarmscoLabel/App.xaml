@@ -1,0 +1,8 @@
+<Application x:Class="FarmscoLabel.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <!-- StartupUri: 프로그램을 켜면 MainWindow.xaml 창을 먼저 띄운다는 뜻 -->
+    <Application.Resources>
+    </Application.Resources>
+</Application>

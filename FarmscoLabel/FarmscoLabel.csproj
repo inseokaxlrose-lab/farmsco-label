@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- 이 프로젝트의 기본 설정 -->
+  <PropertyGroup>
+    <!-- WPF 데스크탑 앱: 실행하면 창(윈도우)이 뜨는 프로그램 -->
+    <OutputType>WinExe</OutputType>
+    <!-- .NET 8 + Windows 전용 (WPF는 Windows에서만 동작) -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <!-- WPF 기능 켜기 -->
+    <UseWPF>true</UseWPF>
+    <!-- System.Drawing.Printing 등 일부 인쇄 API 사용을 위해 켬 -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- 프로그램 이름/버전 (설치 정보에 표시됨) -->
+    <AssemblyName>FarmscoLabel</AssemblyName>
+    <Version>1.0.0</Version>
+    <ApplicationTitle>팜스코 라벨 출력</ApplicationTitle>
+  </PropertyGroup>
+
+  <!-- 외부 라이브러리(NuGet 패키지) -->
+  <ItemGroup>
+    <!-- 엑셀(.xlsx) 읽기 라이브러리. Excel 프로그램 설치 없이도 읽을 수 있음 -->
+    <PackageReference Include="ClosedXML" Version="0.104.1" />
+    <!-- 참고: 라벨 인쇄용 System.Drawing / System.Drawing.Printing 은
+         위의 UseWindowsForms=true 설정으로 자동 포함되므로 별도 패키지 참조가 필요 없습니다. -->
+  </ItemGroup>
+
+</Project>

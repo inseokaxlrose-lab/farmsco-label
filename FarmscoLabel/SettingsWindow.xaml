@@ -1,0 +1,50 @@
+<Window x:Class="FarmscoLabel.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="설정" Height="480" Width="460"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        FontFamily="맑은 고딕" FontSize="13">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="출고지 (라벨 고정 문구)" FontWeight="Bold" Margin="0,0,0,4"/>
+            <TextBox x:Name="TxtSource" Margin="0,0,0,12"/>
+
+            <TextBlock Text="라벨 크기 (mm)" FontWeight="Bold" Margin="0,0,0,4"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                <TextBlock Text="가로" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBox x:Name="TxtWidth" Width="70"/>
+                <TextBlock Text="세로" VerticalAlignment="Center" Margin="16,0,6,0"/>
+                <TextBox x:Name="TxtHeight" Width="70"/>
+            </StackPanel>
+
+            <TextBlock Text="인쇄 위치 보정 (mm) — 양식지와 어긋날 때 전체를 밀어줌"
+                       FontWeight="Bold" Margin="0,0,0,4" TextWrapping="Wrap"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                <TextBlock Text="X" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBox x:Name="TxtOffsetX" Width="70"/>
+                <TextBlock Text="Y" VerticalAlignment="Center" Margin="16,0,6,0"/>
+                <TextBox x:Name="TxtOffsetY" Width="70"/>
+            </StackPanel>
+
+            <TextBlock Text="글꼴" FontWeight="Bold" Margin="0,0,0,4"/>
+            <TextBox x:Name="TxtFont" Margin="0,0,0,12"/>
+
+            <CheckBox x:Name="ChkRotate" Content="90도 회전해서 인쇄 (급지 방향이 맞지 않을 때)"
+                      Margin="0,0,0,12"/>
+
+            <TextBlock TextWrapping="Wrap" Foreground="#6B7280"
+                       Text="※ 각 항목의 세부 좌표는 설정 파일(settings.json)에서 조정할 수 있어요.  위치: %APPDATA%\FarmscoLabel\settings.json"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="저장" Padding="18,6" FontWeight="Bold" Click="Save_Click" Margin="0,0,8,0"/>
+            <Button Content="취소" Padding="18,6" Click="Cancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
