@@ -37,9 +37,6 @@
 
             <CheckBox x:Name="ChkRotate" Content="90도 회전해서 인쇄 (급지 방향이 맞지 않을 때)"
                       Margin="0,0,0,12"/>
-
-            <TextBlock TextWrapping="Wrap" Foreground="#6B7280"
-                       Text="※ 각 항목의 세부 좌표는 설정 파일(settings.json)에서 조정할 수 있어요.  위치: %APPDATA%\FarmscoLabel\settings.json"/>
         </StackPanel>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
