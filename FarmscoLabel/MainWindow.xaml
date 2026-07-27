@@ -87,6 +87,7 @@
                   IsReadOnly="True" SelectionMode="Extended"
                   CanUserAddRows="False" HeadersVisibility="Column"
                   GridLinesVisibility="All" RowHeaderWidth="0"
+                  RowHeight="34"
                   ColumnHeaderStyle="{StaticResource CenterHeader}"
                   SelectionChanged="GridMaster_SelectionChanged">
             <DataGrid.Columns>
@@ -136,6 +137,7 @@
             <DataGrid x:Name="GridDetail" AutoGenerateColumns="False" IsReadOnly="True"
                       CanUserAddRows="False" HeadersVisibility="Column"
                       GridLinesVisibility="All" RowHeaderWidth="0"
+                      RowHeight="34"
                       ColumnHeaderStyle="{StaticResource CenterHeader}">
                 <DataGrid.Columns>
                     <!-- 박스 / 낱개 구분 (입수량만큼 꽉 차면 박스, 적으면 낱개) -->
