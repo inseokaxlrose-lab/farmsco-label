@@ -18,6 +18,10 @@ AppVersion={#AppVersion}
 AppPublisher=Farmsco
 DefaultDirName={autopf}\FarmscoLabel
 DefaultGroupName={#AppName}
+; 설치 경로 선택 화면을 건너뛰고 항상 위 경로에 자동 설치(폴더 없으면 생성, 있으면 덮어씀)
+DisableDirPage=yes
+; 이전 설치 경로(레지스트리 기록)를 무시하고 항상 DefaultDirName 사용 → 과거 소스폴더 설치 기록 무시
+UsePreviousAppDir=no
 ; 설치파일이 만들어질 위치와 이름
 OutputDir=Output
 OutputBaseFilename=FarmscoLabel_Setup_{#AppVersion}
@@ -127,22 +131,6 @@ function NextButtonClick(CurPageID: Integer): Boolean;
 begin
   Result := True;
 
-  { 설치 폴더 선택 페이지에서 소스/git 폴더면 거부 }
-  if CurPageID = wpSelectDir then
-  begin
-    if IsSourceFolder(WizardDirValue) then
-    begin
-      MsgBox(
-        '선택한 폴더는 프로그램 소스(개발) 폴더로 보입니다:' + #13#10 +
-        WizardDirValue + #13#10#13#10 +
-        '이 폴더에 설치하면 소스가 손상되거나 제거 시 삭제될 수 있습니다.' + #13#10 +
-        '다른 폴더(예: C:\Program Files\FarmscoLabel)를 선택하세요.',
-        mbCriticalError, MB_OK);
-      Result := False;
-      Exit;
-    end;
-  end;
-
   { '설치' 직전(ready 페이지)에서 런타임을 점검 → 없으면 다운로드 후 설치 }
   if (CurPageID = wpReady) and (not IsDotNet8DesktopInstalled()) then
   begin
@@ -181,6 +169,14 @@ end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
+  { 최후의 방어선: 어떤 이유로든 설치 경로가 소스/git 폴더면 설치 중단 }
+  if IsSourceFolder(ExpandConstant('{app}')) then
+  begin
+    Result :=
+      '설치 경로가 프로그램 소스(개발) 폴더로 보여 설치를 중단합니다:' + #13#10 +
+      ExpandConstant('{app}');
+    Exit;
+  end;
   { 파일을 실제로 덮어쓰기 직전에 호출됨 → 여기서 종료해야 잠금이 풀림 }
   KillRunningApp();
   Result := '';
