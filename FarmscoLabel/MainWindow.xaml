@@ -12,14 +12,14 @@
         <Style x:Key="CenterHeader" TargetType="DataGridColumnHeader">
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
         </Style>
-        <!-- 모든 셀의 값을 '세로 가운데'에 배치 (행 높이가 커도 글자가 중앙에) -->
-        <Style TargetType="DataGridCell">
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-        </Style>
-        <!-- 텍스트 컬럼의 '값'을 가운데 정렬 -->
+        <!-- 텍스트 컬럼의 '값'을 (가로+세로) 가운데 정렬 -->
         <Style x:Key="CenterCell" TargetType="TextBlock">
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <!-- 좌측정렬 텍스트 컬럼용: 세로만 가운데 (가로는 기본 왼쪽) -->
+        <Style x:Key="VCenter" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
     </Window.Resources>
@@ -95,20 +95,19 @@
                   RowHeight="34"
                   ColumnHeaderStyle="{StaticResource CenterHeader}"
                   SelectionChanged="GridMaster_SelectionChanged">
-            <DataGrid.Resources>
-                <!-- ElementStyle 이 없는 텍스트 컬럼의 값도 세로 가운데에 배치 -->
-                <Style TargetType="TextBlock">
-                    <Setter Property="VerticalAlignment" Value="Center"/>
-                </Style>
-            </DataGrid.Resources>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="화주명" Binding="{Binding ShipperName}" Width="90"/>
-                <DataGridTextColumn Header="납품처명" Binding="{Binding DeliveryPlace}" Width="150"/>
-                <DataGridTextColumn Header="배송센터" Binding="{Binding DeliveryCenter}" Width="120"/>
+                <DataGridTextColumn Header="화주명" Binding="{Binding ShipperName}" Width="90"
+                                    ElementStyle="{StaticResource VCenter}"/>
+                <DataGridTextColumn Header="납품처명" Binding="{Binding DeliveryPlace}" Width="150"
+                                    ElementStyle="{StaticResource VCenter}"/>
+                <DataGridTextColumn Header="배송센터" Binding="{Binding DeliveryCenter}" Width="120"
+                                    ElementStyle="{StaticResource VCenter}"/>
                 <DataGridTextColumn Header="요청일자" Binding="{Binding RequestDate}" Width="90"
                                     ElementStyle="{StaticResource CenterCell}"/>
-                <DataGridTextColumn Header="품목명" Binding="{Binding ItemName}" Width="*"/>
-                <DataGridTextColumn Header="보관유형" Binding="{Binding StorageTypeRaw}" Width="90"/>
+                <DataGridTextColumn Header="품목명" Binding="{Binding ItemName}" Width="*"
+                                    ElementStyle="{StaticResource VCenter}"/>
+                <DataGridTextColumn Header="보관유형" Binding="{Binding StorageTypeRaw}" Width="90"
+                                    ElementStyle="{StaticResource VCenter}"/>
                 <DataGridTextColumn Header="총수량" Binding="{Binding Quantity}" Width="70"
                                     ElementStyle="{StaticResource CenterCell}"/>
                 <DataGridTextColumn Header="입수수량" Binding="{Binding BoxUnitQty}" Width="70"
@@ -117,7 +116,7 @@
                 <DataGridTextColumn Header="박스수량" Binding="{Binding BoxCount}" Width="80"
                                     ElementStyle="{StaticResource CenterCell}">
                     <DataGridTextColumn.CellStyle>
-                        <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                        <Style TargetType="DataGridCell">
                             <Setter Property="FontWeight" Value="Bold"/>
                             <Setter Property="Background" Value="#FFF7D6"/>
                             <!-- 선택해도 값이 안 보이지 않도록 글자색을 항상 검정으로 고정 -->
@@ -150,17 +149,12 @@
                       GridLinesVisibility="All" RowHeaderWidth="0"
                       RowHeight="34"
                       ColumnHeaderStyle="{StaticResource CenterHeader}">
-                <DataGrid.Resources>
-                    <!-- ElementStyle 이 없는 텍스트 컬럼의 값도 세로 가운데에 배치 -->
-                    <Style TargetType="TextBlock">
-                        <Setter Property="VerticalAlignment" Value="Center"/>
-                    </Style>
-                </DataGrid.Resources>
                 <DataGrid.Columns>
                     <!-- 박스 / 낱개 구분 (입수량만큼 꽉 차면 박스, 적으면 낱개) -->
-                    <DataGridTextColumn Header="구분" Binding="{Binding PackTypeText}" Width="60">
+                    <DataGridTextColumn Header="구분" Binding="{Binding PackTypeText}" Width="60"
+                                        ElementStyle="{StaticResource CenterCell}">
                         <DataGridTextColumn.CellStyle>
-                            <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                            <Style TargetType="DataGridCell">
                                 <Setter Property="FontWeight" Value="Bold"/>
                                 <!-- 선택해도 글자가 안 보이지 않도록 검정으로 고정 -->
                                 <Setter Property="Foreground" Value="Black"/>
@@ -182,10 +176,14 @@
                                         ElementStyle="{StaticResource CenterCell}"/>
                     <DataGridTextColumn Header="수량(박스/총)" Binding="{Binding QtyText}" Width="140"
                                         ElementStyle="{StaticResource CenterCell}"/>
-                    <DataGridTextColumn Header="납품처명" Binding="{Binding DeliveryPlace}" Width="150"/>
-                    <DataGridTextColumn Header="품목명" Binding="{Binding ItemName}" Width="*"/>
-                    <DataGridTextColumn Header="보관유형" Binding="{Binding StorageTypeRaw}" Width="90"/>
-                    <DataGridTextColumn Header="출고지" Binding="{Binding ShippingSource}" Width="90"/>
+                    <DataGridTextColumn Header="납품처명" Binding="{Binding DeliveryPlace}" Width="150"
+                                        ElementStyle="{StaticResource VCenter}"/>
+                    <DataGridTextColumn Header="품목명" Binding="{Binding ItemName}" Width="*"
+                                        ElementStyle="{StaticResource VCenter}"/>
+                    <DataGridTextColumn Header="보관유형" Binding="{Binding StorageTypeRaw}" Width="90"
+                                        ElementStyle="{StaticResource VCenter}"/>
+                    <DataGridTextColumn Header="출고지" Binding="{Binding ShippingSource}" Width="90"
+                                        ElementStyle="{StaticResource VCenter}"/>
                 </DataGrid.Columns>
             </DataGrid>
         </DockPanel>
