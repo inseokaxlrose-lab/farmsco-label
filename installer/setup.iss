@@ -28,8 +28,9 @@ ArchitecturesInstallIn64BitMode=x64compatible
 ArchitecturesAllowed=x64compatible
 ; 설치 화면
 WizardStyle=modern
-; 관리자 권한 없이 사용자 폴더에 설치(현장 PC 권한 문제 회피). 필요하면 admin 으로 변경.
-PrivilegesRequired=lowest
+; 관리자 권한으로 표준 위치(C:\Program Files\FarmscoLabel)에 설치.
+; .NET 런타임 자동 설치 시에도 어차피 UAC 가 필요하므로 admin 으로 통일.
+PrivilegesRequired=admin
 ; 업데이트 시 실행 중이면 자동으로 닫도록 Inno Setup 에 알림
 CloseApplications=yes
 CloseApplicationsFilter=*.exe
@@ -111,9 +112,37 @@ begin
   Result := Result and ((ResultCode = 0) or (ResultCode = 3010));
 end;
 
+{ ── 선택한 폴더가 개발 소스/git 저장소인지 검사 ──
+  .git 폴더나 .csproj/.sln 이 있으면 소스 트리로 보고 설치를 막는다.
+  (소스에 빌드산출물이 섞이거나, 제거 시 소스가 삭제되는 사고 방지) }
+function IsSourceFolder(Dir: String): Boolean;
+begin
+  Result :=
+    DirExists(Dir + '\.git') or
+    FileExists(Dir + '\FarmscoLabel.sln') or
+    FileExists(Dir + '\FarmscoLabel\FarmscoLabel.csproj');
+end;
+
 function NextButtonClick(CurPageID: Integer): Boolean;
 begin
   Result := True;
+
+  { 설치 폴더 선택 페이지에서 소스/git 폴더면 거부 }
+  if CurPageID = wpSelectDir then
+  begin
+    if IsSourceFolder(WizardDirValue) then
+    begin
+      MsgBox(
+        '선택한 폴더는 프로그램 소스(개발) 폴더로 보입니다:' + #13#10 +
+        WizardDirValue + #13#10#13#10 +
+        '이 폴더에 설치하면 소스가 손상되거나 제거 시 삭제될 수 있습니다.' + #13#10 +
+        '다른 폴더(예: C:\Program Files\FarmscoLabel)를 선택하세요.',
+        mbCriticalError, MB_OK);
+      Result := False;
+      Exit;
+    end;
+  end;
+
   { '설치' 직전(ready 페이지)에서 런타임을 점검 → 없으면 다운로드 후 설치 }
   if (CurPageID = wpReady) and (not IsDotNet8DesktopInstalled()) then
   begin
