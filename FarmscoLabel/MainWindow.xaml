@@ -95,6 +95,12 @@
                   RowHeight="34"
                   ColumnHeaderStyle="{StaticResource CenterHeader}"
                   SelectionChanged="GridMaster_SelectionChanged">
+            <DataGrid.Resources>
+                <!-- ElementStyle 이 없는 텍스트 컬럼의 값도 세로 가운데에 배치 -->
+                <Style TargetType="TextBlock">
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                </Style>
+            </DataGrid.Resources>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="화주명" Binding="{Binding ShipperName}" Width="90"/>
                 <DataGridTextColumn Header="납품처명" Binding="{Binding DeliveryPlace}" Width="150"/>
@@ -144,6 +150,12 @@
                       GridLinesVisibility="All" RowHeaderWidth="0"
                       RowHeight="34"
                       ColumnHeaderStyle="{StaticResource CenterHeader}">
+                <DataGrid.Resources>
+                    <!-- ElementStyle 이 없는 텍스트 컬럼의 값도 세로 가운데에 배치 -->
+                    <Style TargetType="TextBlock">
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                    </Style>
+                </DataGrid.Resources>
                 <DataGrid.Columns>
                     <!-- 박스 / 낱개 구분 (입수량만큼 꽉 차면 박스, 적으면 낱개) -->
                     <DataGridTextColumn Header="구분" Binding="{Binding PackTypeText}" Width="60">
