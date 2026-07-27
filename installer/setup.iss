@@ -48,11 +48,15 @@ Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 ; dotnet publish 결과 폴더(publish) 전체를 설치에 포함
 Source: "..\FarmscoLabel\bin\Release\net8.0-windows\publish\*"; DestDir: "{app}"; Excludes: "*.pdb"; Flags: recursesubdirs createallsubdirs ignoreversion
 
+[InstallDelete]
+; 예전(lowest 권한) 설치가 사용자 바탕화면에 남긴 잔여 바로가기 제거 → 바탕화면 중복 아이콘 방지
+Type: files; Name: "{userdesktop}\{#AppName}.lnk"
+
 [Icons]
-; 시작 메뉴 & 바탕화면 바로가기
-Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"
+; 시작 메뉴 & 바탕화면 바로가기 (아이콘은 exe 에 embed 된 라벨 아이콘 사용)
+Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{app}\{#AppExe}"; IconIndex: 0
 Name: "{group}\{#AppName} 제거"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{app}\{#AppExe}"; IconIndex: 0; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "바탕화면에 바로가기 만들기"; GroupDescription: "추가 아이콘:"; Flags: checkedonce

@@ -16,6 +16,8 @@
     <AssemblyName>FarmscoLabel</AssemblyName>
     <Version>1.0.0</Version>
     <ApplicationTitle>팜스코 라벨 출력</ApplicationTitle>
+    <!-- 실행파일/바로가기/창 아이콘 (배송 라벨 테마). tools\make-icon.ps1 로 재생성 가능 -->
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <!-- 외부 라이브러리(NuGet 패키지) -->
