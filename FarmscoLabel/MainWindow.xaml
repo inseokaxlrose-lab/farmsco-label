@@ -72,6 +72,12 @@
 
                 <Separator Margin="10,0" Width="1"/>
 
+                <!-- 컬럼 헤더 정렬을 해제하고 원래(업로드) 순서로 되돌림 -->
+                <Button x:Name="BtnResetSort" Content="↕ 정렬 초기화" Padding="12,6" Margin="2,0"
+                        Click="BtnResetSort_Click"/>
+
+                <Separator Margin="10,0" Width="1"/>
+
                 <Button x:Name="BtnSettings" Content="⚙ 설정" Padding="12,6" Click="BtnSettings_Click"/>
             </WrapPanel>
         </Border>

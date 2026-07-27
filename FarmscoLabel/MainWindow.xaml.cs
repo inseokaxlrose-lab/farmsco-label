@@ -154,6 +154,23 @@ namespace FarmscoLabel
             UpdateStatus();
         }
 
+        // ── 정렬 초기화: 컬럼 헤더 정렬을 모두 해제하고 원래(업로드) 순서로 되돌린다 ──
+        private void BtnResetSort_Click(object sender, RoutedEventArgs e)
+        {
+            // 마스터 표
+            _view.SortDescriptions.Clear();
+            foreach (var col in GridMaster.Columns) col.SortDirection = null;
+            _view.Refresh();
+
+            // 상세 표
+            var detailView = CollectionViewSource.GetDefaultView(_detailLabels);
+            detailView.SortDescriptions.Clear();
+            foreach (var col in GridDetail.Columns) col.SortDirection = null;
+            detailView.Refresh();
+
+            TxtStatus.Text = "정렬을 원래 순서로 되돌렸습니다.";
+        }
+
         // ── 행 선택 시 상세(박스별 라벨) 표시 ──
         private void GridMaster_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
