@@ -116,7 +116,7 @@ namespace FarmscoLabel.Services
 
             // 1) 제목: (주)팜스코 — 전체 너비, 가운데, 크게
             Cell(g, pen, left, y, tableW, hTitle);
-            DrawText(g, label.ShipperName, left, y, tableW, hTitle, 15f, bold: true, hCenter: true);
+            DrawText(g, label.ShipperName, left, y, tableW, hTitle, 17f, bold: true, hCenter: true);
             y += hTitle;
 
             // 2) 배송센터 | 값 | 출고지 | 값
@@ -142,27 +142,27 @@ namespace FarmscoLabel.Services
             // 6) 수량 | [총수량/수량/순번] 헤더 + 값 (수량 라벨은 두 줄 높이 병합)
             float hQty = hQtyHead + hQtyVal;
             Cell(g, pen, left, y, labelW, hQty);
-            DrawText(g, "수량", left, y, labelW, hQty, 9f, bold: true, hCenter: true);
+            DrawText(g, "수량", left, y, labelW, hQty, 11f, bold: true, hCenter: true);
 
             float c1 = valW * 0.28f;      // 총수량
             float c2 = valW * 0.40f;      // 수량(박스/총)
             float c3 = valW - c1 - c2;    // 순번
             // 헤더
-            Cell(g, pen, xVal, y, c1, hQtyHead);       DrawText(g, "총수량", xVal, y, c1, hQtyHead, 8f, true, true);
-            Cell(g, pen, xVal + c1, y, c2, hQtyHead);  DrawText(g, "수량", xVal + c1, y, c2, hQtyHead, 8f, true, true);
-            Cell(g, pen, xVal + c1 + c2, y, c3, hQtyHead); DrawText(g, "순번", xVal + c1 + c2, y, c3, hQtyHead, 8f, true, true);
+            Cell(g, pen, xVal, y, c1, hQtyHead);       DrawText(g, "총수량", xVal, y, c1, hQtyHead, 10f, true, true);
+            Cell(g, pen, xVal + c1, y, c2, hQtyHead);  DrawText(g, "수량", xVal + c1, y, c2, hQtyHead, 10f, true, true);
+            Cell(g, pen, xVal + c1 + c2, y, c3, hQtyHead); DrawText(g, "순번", xVal + c1 + c2, y, c3, hQtyHead, 10f, true, true);
             // 값
             float yv = y + hQtyHead;
-            Cell(g, pen, xVal, yv, c1, hQtyVal);       DrawText(g, label.TotalQty.ToString(), xVal, yv, c1, hQtyVal, 10f, true, true);
-            Cell(g, pen, xVal + c1, yv, c2, hQtyVal);  DrawText(g, label.QtyText, xVal + c1, yv, c2, hQtyVal, 10f, true, true);
-            Cell(g, pen, xVal + c1 + c2, yv, c3, hQtyVal); DrawText(g, label.SequenceText, xVal + c1 + c2, yv, c3, hQtyVal, 10f, true, true);
+            Cell(g, pen, xVal, yv, c1, hQtyVal);       DrawText(g, label.TotalQty.ToString(), xVal, yv, c1, hQtyVal, 12f, true, true);
+            Cell(g, pen, xVal + c1, yv, c2, hQtyVal);  DrawText(g, label.QtyText, xVal + c1, yv, c2, hQtyVal, 12f, true, true);
+            Cell(g, pen, xVal + c1 + c2, yv, c3, hQtyVal); DrawText(g, label.SequenceText, xVal + c1 + c2, yv, c3, hQtyVal, 12f, true, true);
             y += hQty;
 
             // 7) 비고 | 값(전체, 왼쪽·위 정렬)
             Cell(g, pen, left, y, labelW, hRemark);
-            DrawText(g, "비고", left, y, labelW, hRemark, 9f, bold: true, hCenter: true);
+            DrawText(g, "비고", left, y, labelW, hRemark, 11f, bold: true, hCenter: true);
             Cell(g, pen, xVal, y, valW, hRemark);
-            DrawText(g, label.Remark, xVal, y, valW, hRemark, 9f, bold: false, hCenter: false, vCenter: false);
+            DrawText(g, label.Remark, xVal, y, valW, hRemark, 11f, bold: false, hCenter: false, vCenter: false);
         }
 
         // '항목명 | 값' 한 줄을 그린다.
@@ -170,9 +170,9 @@ namespace FarmscoLabel.Services
             float labelW, float valW, float h, string labelText, string? value, bool valueBold)
         {
             Cell(g, pen, left, y, labelW, h);
-            DrawText(g, labelText, left, y, labelW, h, 9f, bold: true, hCenter: true);
+            DrawText(g, labelText, left, y, labelW, h, 11f, bold: true, hCenter: true);
             Cell(g, pen, xVal, y, valW, h);
-            DrawText(g, value, xVal, y, valW, h, valueBold ? 10f : 9f, bold: valueBold, hCenter: true);
+            DrawText(g, value, xVal, y, valW, h, valueBold ? 12f : 11f, bold: valueBold, hCenter: true);
         }
 
         // '항목명 | 값 | 항목명2 | 값2' (4칸) 한 줄을 그린다.
@@ -185,10 +185,10 @@ namespace FarmscoLabel.Services
             float x3 = x2 + l2w;             // 둘째 값 시작
             float v2w = right - x3;
 
-            Cell(g, pen, left, y, labelW, h);       DrawText(g, l1, left, y, labelW, h, 9f, true, true);
-            Cell(g, pen, xVal, y, v1w, h);          DrawText(g, v1, xVal, y, v1w, h, 9f, false, true);
-            Cell(g, pen, x2, y, l2w, h);            DrawText(g, l2, x2, y, l2w, h, 9f, true, true);
-            Cell(g, pen, x3, y, v2w, h);            DrawText(g, v2, x3, y, v2w, h, 9f, false, true);
+            Cell(g, pen, left, y, labelW, h);       DrawText(g, l1, left, y, labelW, h, 11f, true, true);
+            Cell(g, pen, xVal, y, v1w, h);          DrawText(g, v1, xVal, y, v1w, h, 11f, false, true);
+            Cell(g, pen, x2, y, l2w, h);            DrawText(g, l2, x2, y, l2w, h, 11f, true, true);
+            Cell(g, pen, x3, y, v2w, h);            DrawText(g, v2, x3, y, v2w, h, 11f, false, true);
         }
 
         // 한 칸(테두리 사각형)을 그린다.
