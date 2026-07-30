@@ -59,14 +59,14 @@ namespace FarmscoLabel.Services
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
 
-                // 급지 방향 문제로 회전이 필요하면 좌표계를 90도 돌린다
-                if (_settings.Rotate90)
-                {
-                    g.TranslateTransform((float)_settings.LabelWidthMm, 0);
-                    g.RotateTransform(90);
-                }
+                // 라벨은 항상 90도 회전 출력(기존 라벨 양식과 동일 방향).
+                // 인쇄 페이지는 100(폭)x120(급지) 그대로 두고, 내용은 120x100 가로형 캔버스로
+                // 그린 뒤 90도 돌려 페이지에 얹는다(헤드 폭 100mm를 넘지 않아 잘림 없음).
+                g.TranslateTransform((float)_settings.LabelWidthMm, 0);
+                g.RotateTransform(90);
 
-                DrawLabel(g, labels[index]);
+                // 회전 후 캔버스 크기: 가로=라벨세로(120), 세로=라벨가로(100)
+                DrawLabel(g, labels[index], (float)_settings.LabelHeightMm, (float)_settings.LabelWidthMm);
 
                 index++;
                 // 한 장 찍을 때마다 진행 상황 보고 (예: 3/120장)
@@ -80,15 +80,13 @@ namespace FarmscoLabel.Services
 
         // 라벨 한 장(표 전체)을 그린다.
         // 양식지가 아니라 빈 라벨지에 인쇄하므로, 테두리·항목명·값을 모두 직접 그린다.
-        private void DrawLabel(Graphics g, LabelItem label)
+        // W, H = 그릴 캔버스 크기(mm). 90도 회전 출력이라 가로=라벨세로, 세로=라벨가로가 넘어온다.
+        private void DrawLabel(Graphics g, LabelItem label, float W, float H)
         {
-            // 인쇄 시작점 고정 보정(라벨 실물에 맞춤) + 설정값(OffsetX/Y)만큼 표 전체를 이동
-            const float startX = -3f;  // 시작점 X 보정(mm)
-            const float startY = -2f;  // 시작점 Y 보정(mm)
+            // 인쇄 시작점 보정(회전 기준, 필요 시 조정) + 설정값(OffsetX/Y)
+            const float startX = 0f;  // 시작점 X 보정(mm)
+            const float startY = 0f;  // 시작점 Y 보정(mm)
             g.TranslateTransform((float)_settings.OffsetXMm + startX, (float)_settings.OffsetYMm + startY);
-
-            float W = (float)_settings.LabelWidthMm;   // 라벨 가로(mm)
-            float H = (float)_settings.LabelHeightMm;  // 라벨 세로(mm)
 
             float m = 3f;                 // 바깥 여백(mm)
             float left = m;
@@ -96,99 +94,109 @@ namespace FarmscoLabel.Services
             float top = m;
             float tableW = right - left;
 
-            float labelW = 18f;           // 왼쪽 '항목명' 칸 너비
+            float labelW = 20f;           // 왼쪽 '항목명' 칸 너비
             float xVal = left + labelW;   // 값 영역 시작 X
             float valW = right - xVal;    // 값 영역 너비
 
             using var pen = new Pen(Color.Black, 0.3f);
 
-            // ── 각 행 높이(mm). 합계가 (H - 2m)에 맞도록 구성 ──
-            float hTitle = 13f;   // 제목: (주)팜스코
-            float hRow = 13f;     // 일반 행(배송센터/납품처명/배송일자)
-            float hItem = 15f;    // 품목명
-            float hQtyHead = 9f;  // 수량 헤더(총수량/수량/순번)
-            float hQtyVal = 12f;  // 수량 값
+            // 글자 크기(pt) — 한 곳에서 관리
+            const float fsTitle = 19f, fsLabel = 13f, fsValue = 13f,
+                        fsItem = 14f, fsQtyHead = 12f, fsQtyVal = 14f;
+
+            // ── 각 행 높이(mm): 기준(114mm) 레이아웃을 캔버스 높이에 비례 스케일 ──
+            float available = H - 2 * m;
+            float scale = available / 114f;
+            float hTitle = 13f * scale;   // 제목: (주)팜스코
+            float hRow = 13f * scale;     // 일반 행(배송센터/납품처명/배송일자)
+            float hItem = 15f * scale;    // 품목명
+            float hQtyHead = 9f * scale;  // 수량 헤더(총수량/수량/순번)
+            float hQtyVal = 12f * scale;  // 수량 값
             float used = hTitle + hRow * 3 + hItem + hQtyHead + hQtyVal;
-            float hRemark = (H - 2 * m) - used; // 비고: 나머지 전부
-            if (hRemark < 12f) hRemark = 12f;
+            float hRemark = available - used; // 비고: 나머지 전부
+            if (hRemark < 10f) hRemark = 10f;
 
             float y = top;
 
             // 1) 제목: (주)팜스코 — 전체 너비, 가운데, 크게
             Cell(g, pen, left, y, tableW, hTitle);
-            DrawText(g, label.ShipperName, left, y, tableW, hTitle, 17f, bold: true, hCenter: true);
+            DrawText(g, label.ShipperName, left, y, tableW, hTitle, fsTitle, bold: true, hCenter: true);
             y += hTitle;
 
-            // 2) 배송센터 | 값 | 출고지 | 값
-            DrawFourCol(g, pen, left, xVal, right, y, hRow, labelW,
-                "배송센터", label.DeliveryCenter, "출고지", label.ShippingSource);
+            // 2) 배송센터 | 값(왼쪽) | 출고지 | 값(왼쪽)
+            DrawFourCol(g, pen, left, xVal, right, y, hRow, labelW, fsLabel, fsValue,
+                "배송센터", label.DeliveryCenter, valueLeft1: true,
+                "출고지", label.ShippingSource, valueLeft2: true);
             y += hRow;
 
-            // 3) 납품처명 | 값(전체)
-            DrawLabelValue(g, pen, left, xVal, y, labelW, valW, hRow,
-                "납품처명", label.DeliveryPlace, valueBold: false);
+            // 3) 납품처명 | 값(왼쪽)
+            DrawLabelValue(g, pen, left, xVal, y, labelW, valW, hRow, fsLabel, fsValue,
+                "납품처명", label.DeliveryPlace, valueLeft: true);
             y += hRow;
 
-            // 4) 배송일자 | 값 | 보관유형 | 값
-            DrawFourCol(g, pen, left, xVal, right, y, hRow, labelW,
-                "배송일자", label.RequestDate, "보관유형", label.StorageTypeRaw);
+            // 4) 배송일자 | 값(가운데) | 보관유형 | 값(가운데)
+            DrawFourCol(g, pen, left, xVal, right, y, hRow, labelW, fsLabel, fsValue,
+                "배송일자", label.RequestDate, valueLeft1: false,
+                "보관유형", label.StorageTypeRaw, valueLeft2: false);
             y += hRow;
 
-            // 5) 품목명 | 값(전체, 굵게)
-            DrawLabelValue(g, pen, left, xVal, y, labelW, valW, hItem,
-                "품목명", label.ItemName, valueBold: true);
+            // 5) 품목명 | 값(왼쪽)
+            DrawLabelValue(g, pen, left, xVal, y, labelW, valW, hItem, fsLabel, fsItem,
+                "품목명", label.ItemName, valueLeft: true);
             y += hItem;
 
             // 6) 수량 | [총수량/수량/순번] 헤더 + 값 (수량 라벨은 두 줄 높이 병합)
             float hQty = hQtyHead + hQtyVal;
             Cell(g, pen, left, y, labelW, hQty);
-            DrawText(g, "수량", left, y, labelW, hQty, 11f, bold: true, hCenter: true);
+            DrawText(g, "수량", left, y, labelW, hQty, fsLabel, bold: true, hCenter: true);
 
             float c1 = valW * 0.28f;      // 총수량
             float c2 = valW * 0.40f;      // 수량(박스/총)
             float c3 = valW - c1 - c2;    // 순번
             // 헤더
-            Cell(g, pen, xVal, y, c1, hQtyHead);       DrawText(g, "총수량", xVal, y, c1, hQtyHead, 10f, true, true);
-            Cell(g, pen, xVal + c1, y, c2, hQtyHead);  DrawText(g, "수량", xVal + c1, y, c2, hQtyHead, 10f, true, true);
-            Cell(g, pen, xVal + c1 + c2, y, c3, hQtyHead); DrawText(g, "순번", xVal + c1 + c2, y, c3, hQtyHead, 10f, true, true);
+            Cell(g, pen, xVal, y, c1, hQtyHead);       DrawText(g, "총수량", xVal, y, c1, hQtyHead, fsQtyHead, true, true);
+            Cell(g, pen, xVal + c1, y, c2, hQtyHead);  DrawText(g, "수량", xVal + c1, y, c2, hQtyHead, fsQtyHead, true, true);
+            Cell(g, pen, xVal + c1 + c2, y, c3, hQtyHead); DrawText(g, "순번", xVal + c1 + c2, y, c3, hQtyHead, fsQtyHead, true, true);
             // 값
             float yv = y + hQtyHead;
-            Cell(g, pen, xVal, yv, c1, hQtyVal);       DrawText(g, label.TotalQty.ToString(), xVal, yv, c1, hQtyVal, 12f, true, true);
-            Cell(g, pen, xVal + c1, yv, c2, hQtyVal);  DrawText(g, label.QtyText, xVal + c1, yv, c2, hQtyVal, 12f, true, true);
-            Cell(g, pen, xVal + c1 + c2, yv, c3, hQtyVal); DrawText(g, label.SequenceText, xVal + c1 + c2, yv, c3, hQtyVal, 12f, true, true);
+            Cell(g, pen, xVal, yv, c1, hQtyVal);       DrawText(g, label.TotalQty.ToString(), xVal, yv, c1, hQtyVal, fsQtyVal, true, true);
+            Cell(g, pen, xVal + c1, yv, c2, hQtyVal);  DrawText(g, label.QtyText, xVal + c1, yv, c2, hQtyVal, fsQtyVal, true, true);
+            Cell(g, pen, xVal + c1 + c2, yv, c3, hQtyVal); DrawText(g, label.SequenceText, xVal + c1 + c2, yv, c3, hQtyVal, fsQtyVal, true, true);
             y += hQty;
 
-            // 7) 비고 | 값(전체, 왼쪽·위 정렬)
+            // 7) 비고 | 값(왼쪽·세로 가운데)
             Cell(g, pen, left, y, labelW, hRemark);
-            DrawText(g, "비고", left, y, labelW, hRemark, 11f, bold: true, hCenter: true);
+            DrawText(g, "비고", left, y, labelW, hRemark, fsLabel, bold: true, hCenter: true);
             Cell(g, pen, xVal, y, valW, hRemark);
-            DrawText(g, label.Remark, xVal, y, valW, hRemark, 11f, bold: false, hCenter: false, vCenter: false);
+            DrawText(g, label.Remark, xVal, y, valW, hRemark, fsValue, bold: true, hCenter: false, vCenter: true);
         }
 
-        // '항목명 | 값' 한 줄을 그린다.
+        // '항목명 | 값' 한 줄을 그린다. (값은 볼드, valueLeft=true면 왼쪽정렬)
         private void DrawLabelValue(Graphics g, Pen pen, float left, float xVal, float y,
-            float labelW, float valW, float h, string labelText, string? value, bool valueBold)
+            float labelW, float valW, float h, float labelSize, float valueSize,
+            string labelText, string? value, bool valueLeft)
         {
             Cell(g, pen, left, y, labelW, h);
-            DrawText(g, labelText, left, y, labelW, h, 11f, bold: true, hCenter: true);
+            DrawText(g, labelText, left, y, labelW, h, labelSize, bold: true, hCenter: true);
             Cell(g, pen, xVal, y, valW, h);
-            DrawText(g, value, xVal, y, valW, h, valueBold ? 12f : 11f, bold: valueBold, hCenter: true);
+            DrawText(g, value, xVal, y, valW, h, valueSize, bold: true, hCenter: !valueLeft);
         }
 
-        // '항목명 | 값 | 항목명2 | 값2' (4칸) 한 줄을 그린다.
+        // '항목명 | 값 | 항목명2 | 값2' (4칸) 한 줄을 그린다. (값은 볼드)
         private void DrawFourCol(Graphics g, Pen pen, float left, float xVal, float right, float y,
-            float h, float labelW, string l1, string? v1, string l2, string? v2)
+            float h, float labelW, float labelSize, float valueSize,
+            string l1, string? v1, bool valueLeft1, string l2, string? v2, bool valueLeft2)
         {
-            float v1w = 32f;                 // 첫 값 칸 너비
-            float l2w = 18f;                 // 둘째 항목명 칸 너비("보관유형"이 한 줄에 들어가도록)
+            float v1w = 42f;                 // 첫 값 칸 너비(가로형 캔버스라 넓게)
+            float l2w = 20f;                 // 둘째 항목명 칸 너비("보관유형"이 한 줄에 들어가도록)
             float x2 = xVal + v1w;           // 둘째 항목명 시작
             float x3 = x2 + l2w;             // 둘째 값 시작
             float v2w = right - x3;
 
-            Cell(g, pen, left, y, labelW, h);       DrawText(g, l1, left, y, labelW, h, 11f, true, true);
-            Cell(g, pen, xVal, y, v1w, h);          DrawText(g, v1, xVal, y, v1w, h, 11f, false, true);
-            Cell(g, pen, x2, y, l2w, h);            DrawText(g, l2, x2, y, l2w, h, 11f, true, true);
-            Cell(g, pen, x3, y, v2w, h);            DrawText(g, v2, x3, y, v2w, h, 11f, false, true);
+            Cell(g, pen, left, y, labelW, h);       DrawText(g, l1, left, y, labelW, h, labelSize, true, true);
+            Cell(g, pen, xVal, y, v1w, h);          DrawText(g, v1, xVal, y, v1w, h, valueSize, true, hCenter: !valueLeft1);
+            Cell(g, pen, x2, y, l2w, h);            DrawText(g, l2, x2, y, l2w, h, labelSize, true, true);
+            Cell(g, pen, x3, y, v2w, h);            DrawText(g, v2, x3, y, v2w, h, valueSize, true, hCenter: !valueLeft2);
         }
 
         // 한 칸(테두리 사각형)을 그린다.
