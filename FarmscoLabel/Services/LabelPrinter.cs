@@ -85,7 +85,7 @@ namespace FarmscoLabel.Services
         {
             // 인쇄 시작점 보정(회전 기준, 필요 시 조정) + 설정값(OffsetX/Y)
             const float startX = 0f;  // 시작점 X 보정(mm)
-            const float startY = 0f;  // 시작점 Y 보정(mm)
+            const float startY = 2f;  // 시작점 Y 보정(mm)
             g.TranslateTransform((float)_settings.OffsetXMm + startX, (float)_settings.OffsetYMm + startY);
 
             float m = 3f;                 // 바깥 여백(mm)
