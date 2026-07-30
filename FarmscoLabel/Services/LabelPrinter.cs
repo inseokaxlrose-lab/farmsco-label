@@ -83,8 +83,8 @@ namespace FarmscoLabel.Services
         private void DrawLabel(Graphics g, LabelItem label)
         {
             // 인쇄 시작점 고정 보정(라벨 실물에 맞춤) + 설정값(OffsetX/Y)만큼 표 전체를 이동
-            const float startX = -4f;  // 시작점 X 보정(mm)
-            const float startY = -3f;  // 시작점 Y 보정(mm)
+            const float startX = -3f;  // 시작점 X 보정(mm)
+            const float startY = -2f;  // 시작점 Y 보정(mm)
             g.TranslateTransform((float)_settings.OffsetXMm + startX, (float)_settings.OffsetYMm + startY);
 
             float W = (float)_settings.LabelWidthMm;   // 라벨 가로(mm)
