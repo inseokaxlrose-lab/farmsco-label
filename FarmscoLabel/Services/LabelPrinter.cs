@@ -82,8 +82,10 @@ namespace FarmscoLabel.Services
         // 양식지가 아니라 빈 라벨지에 인쇄하므로, 테두리·항목명·값을 모두 직접 그린다.
         private void DrawLabel(Graphics g, LabelItem label)
         {
-            // 전체 보정값(OffsetX/Y)만큼 표 전체를 이동
-            g.TranslateTransform((float)_settings.OffsetXMm, (float)_settings.OffsetYMm);
+            // 인쇄 시작점 고정 보정(라벨 실물에 맞춤) + 설정값(OffsetX/Y)만큼 표 전체를 이동
+            const float startX = -4f;  // 시작점 X 보정(mm)
+            const float startY = -3f;  // 시작점 Y 보정(mm)
+            g.TranslateTransform((float)_settings.OffsetXMm + startX, (float)_settings.OffsetYMm + startY);
 
             float W = (float)_settings.LabelWidthMm;   // 라벨 가로(mm)
             float H = (float)_settings.LabelHeightMm;  // 라벨 세로(mm)
