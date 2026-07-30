@@ -257,24 +257,12 @@ namespace FarmscoLabel
                 return;
             }
 
-            // 프린터 선택 대화상자 표시 (프로그램에서 고른 프린터를 기본 선택으로 띄운다)
-            using var dlg = new System.Windows.Forms.PrintDialog
-            {
-                AllowSomePages = false,
-                AllowSelection = false,
-                AllowPrintToFile = false,
-                UseEXDialog = true,
-                PrinterSettings = new System.Drawing.Printing.PrinterSettings
-                {
-                    PrinterName = printer
-                }
-            };
-            if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
-
-            // 대화상자에서 최종 선택된 프린터를 사용하고, 화면 목록에도 반영
-            printer = dlg.PrinterSettings.PrinterName;
-            if (CmbPrinter.Items.Contains(printer))
-                CmbPrinter.SelectedItem = printer;
+            // Windows 인쇄 대화상자는 드라이버 DEVMODE 로딩·USB 상태 조회로 느리므로(약 7초) 사용하지 않는다.
+            // 프린터는 이미 상단 드롭다운에서 선택했으므로, 즉시 반응하는 확인창으로 대체한다.
+            var confirm = MessageBox.Show(
+                $"'{printer}' 프린터로 라벨 {labels.Count}장을 출력할까요?",
+                "출력 확인", MessageBoxButton.OKCancel, MessageBoxImage.Question);
+            if (confirm != MessageBoxResult.OK) return;
 
             // 출력 진행 오버레이 표시 + 진행바 초기화
             int total = labels.Count;
