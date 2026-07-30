@@ -8,7 +8,8 @@ namespace FarmscoLabel.Services
     {
         // row 한 건을 라벨 목록으로 펼친다.
         // shippingSource: 출고지 고정값(예: "하이포크")
-        public static List<LabelItem> Expand(DeliveryRow row, string shippingSource)
+        // showBoxUnitQty: 품목명 뒤에 "(입수량)"을 붙일지 여부
+        public static List<LabelItem> Expand(DeliveryRow row, string shippingSource, bool showBoxUnitQty = true)
         {
             var result = new List<LabelItem>();
 
@@ -30,31 +31,31 @@ namespace FarmscoLabel.Services
             // 1) 꽉 찬 박스들: 각 박스 수량 = unit, 순번 1/N ~ full/N → "박스"
             for (int i = 1; i <= full; i++)
             {
-                result.Add(MakeLabel(row, shippingSource, total, unit, i, totalBox, isFullBox: true));
+                result.Add(MakeLabel(row, shippingSource, total, unit, i, totalBox, isFullBox: true, showBoxUnitQty));
             }
 
             // 2) 잔량 박스: 마지막 1장, 박스 수량 = remain, 순번 = N/N → "낱개"
             if (remain > 0)
             {
-                result.Add(MakeLabel(row, shippingSource, total, remain, totalBox, totalBox, isFullBox: false));
+                result.Add(MakeLabel(row, shippingSource, total, remain, totalBox, totalBox, isFullBox: false, showBoxUnitQty));
             }
 
             return result;
         }
 
         // 여러 줄을 한꺼번에 펼치기 (필터된 전체를 출력할 때 사용)
-        public static List<LabelItem> ExpandMany(IEnumerable<DeliveryRow> rows, string shippingSource)
+        public static List<LabelItem> ExpandMany(IEnumerable<DeliveryRow> rows, string shippingSource, bool showBoxUnitQty = true)
         {
             var list = new List<LabelItem>();
             foreach (var row in rows)
-                list.AddRange(Expand(row, shippingSource));
+                list.AddRange(Expand(row, shippingSource, showBoxUnitQty));
             return list;
         }
 
         // 라벨 1장 만들기 (값 채우기)
         private static LabelItem MakeLabel(
             DeliveryRow row, string shippingSource,
-            int totalQty, int boxQty, int currentBox, int totalBox, bool isFullBox)
+            int totalQty, int boxQty, int currentBox, int totalBox, bool isFullBox, bool showBoxUnitQty)
         {
             return new LabelItem
             {
@@ -64,7 +65,7 @@ namespace FarmscoLabel.Services
                 DeliveryPlace = row.DeliveryPlace,
                 RequestDate = row.RequestDate,
                 StorageTypeRaw = row.StorageTypeRaw,
-                ItemName = BuildItemName(row.ItemName, row.BoxUnitQty), // 품목명 뒤에 (입수량) 붙임
+                ItemName = BuildItemName(row.ItemName, row.BoxUnitQty, showBoxUnitQty), // 품목명 뒤에 (입수량) 붙임(설정 시)
                 Remark = row.Remark,
                 TotalQty = totalQty,
                 BoxQty = boxQty,
@@ -77,10 +78,11 @@ namespace FarmscoLabel.Services
         // 품목명 뒤에 "(입수량)"을 붙인다.
         // 예) "우유 500ml" + 입수 40 -> "우유 500ml (40)"
         // 이미 "(40)"이 붙어 있으면 중복으로 붙이지 않는다.
-        private static string BuildItemName(string itemName, int boxUnitQty)
+        // showBoxUnitQty=false 이면 입수량을 붙이지 않고 품목명만 반환한다.
+        private static string BuildItemName(string itemName, int boxUnitQty, bool showBoxUnitQty)
         {
             string name = (itemName ?? "").Trim();
-            if (boxUnitQty <= 0) return name;
+            if (!showBoxUnitQty || boxUnitQty <= 0) return name;
 
             string suffix = $"({boxUnitQty})";
             if (name.Replace(" ", "").EndsWith(suffix)) return name; // 이미 붙어 있으면 그대로

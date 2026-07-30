@@ -123,21 +123,21 @@ namespace FarmscoLabel.Services
             DrawText(g, label.ShipperName, left, y, tableW, hTitle, fsTitle, bold: true, hCenter: true);
             y += hTitle;
 
-            // 2) 배송센터 | 값(왼쪽) | 출고지 | 값(왼쪽)
+            // 2) 배송센터 | 값(왼쪽) | 출고지 | 값(왼쪽)  — 항목명 볼드 없음
             DrawFourCol(g, pen, left, xVal, right, y, hRow, labelW, fsLabel, fsValue,
                 "배송센터", label.DeliveryCenter, valueLeft1: true,
-                "출고지", label.ShippingSource, valueLeft2: true);
+                "출고지", label.ShippingSource, valueLeft2: true, labelBold: false);
             y += hRow;
 
-            // 3) 납품처명 | 값(왼쪽)
+            // 3) 납품처명 | 값(왼쪽)  — 항목명 볼드 없음
             DrawLabelValue(g, pen, left, xVal, y, labelW, valW, hRow, fsLabel, fsValue,
-                "납품처명", label.DeliveryPlace, valueLeft: true);
+                "납품처명", label.DeliveryPlace, valueLeft: true, labelBold: false);
             y += hRow;
 
-            // 4) 배송일자 | 값(가운데) | 보관유형 | 값(가운데)
+            // 4) 배송일자 | 값(가운데) | 보관유형 | 값(가운데)  — 항목명 볼드 없음
             DrawFourCol(g, pen, left, xVal, right, y, hRow, labelW, fsLabel, fsValue,
                 "배송일자", label.RequestDate, valueLeft1: false,
-                "보관유형", label.StorageTypeRaw, valueLeft2: false);
+                "보관유형", label.StorageTypeRaw, valueLeft2: false, labelBold: false);
             y += hRow;
 
             // 5) 품목명 | 값(왼쪽)
@@ -172,20 +172,22 @@ namespace FarmscoLabel.Services
         }
 
         // '항목명 | 값' 한 줄을 그린다. (값은 볼드, valueLeft=true면 왼쪽정렬)
+        // labelBold=false면 항목명(왼쪽 칸)은 보통 굵기로 그린다.
         private void DrawLabelValue(Graphics g, Pen pen, float left, float xVal, float y,
             float labelW, float valW, float h, float labelSize, float valueSize,
-            string labelText, string? value, bool valueLeft)
+            string labelText, string? value, bool valueLeft, bool labelBold = true)
         {
             Cell(g, pen, left, y, labelW, h);
-            DrawText(g, labelText, left, y, labelW, h, labelSize, bold: true, hCenter: true);
+            DrawText(g, labelText, left, y, labelW, h, labelSize, bold: labelBold, hCenter: true);
             Cell(g, pen, xVal, y, valW, h);
             DrawText(g, value, xVal, y, valW, h, valueSize, bold: true, hCenter: !valueLeft);
         }
 
         // '항목명 | 값 | 항목명2 | 값2' (4칸) 한 줄을 그린다. (값은 볼드)
+        // labelBold=false면 항목명(l1,l2)은 보통 굵기로 그린다.
         private void DrawFourCol(Graphics g, Pen pen, float left, float xVal, float right, float y,
             float h, float labelW, float labelSize, float valueSize,
-            string l1, string? v1, bool valueLeft1, string l2, string? v2, bool valueLeft2)
+            string l1, string? v1, bool valueLeft1, string l2, string? v2, bool valueLeft2, bool labelBold = true)
         {
             float v1w = 42f;                 // 첫 값 칸 너비(가로형 캔버스라 넓게)
             float l2w = 20f;                 // 둘째 항목명 칸 너비("보관유형"이 한 줄에 들어가도록)
@@ -193,9 +195,9 @@ namespace FarmscoLabel.Services
             float x3 = x2 + l2w;             // 둘째 값 시작
             float v2w = right - x3;
 
-            Cell(g, pen, left, y, labelW, h);       DrawText(g, l1, left, y, labelW, h, labelSize, true, true);
+            Cell(g, pen, left, y, labelW, h);       DrawText(g, l1, left, y, labelW, h, labelSize, labelBold, true);
             Cell(g, pen, xVal, y, v1w, h);          DrawText(g, v1, xVal, y, v1w, h, valueSize, true, hCenter: !valueLeft1);
-            Cell(g, pen, x2, y, l2w, h);            DrawText(g, l2, x2, y, l2w, h, labelSize, true, true);
+            Cell(g, pen, x2, y, l2w, h);            DrawText(g, l2, x2, y, l2w, h, labelSize, labelBold, true);
             Cell(g, pen, x3, y, v2w, h);            DrawText(g, v2, x3, y, v2w, h, valueSize, true, hCenter: !valueLeft2);
         }
 

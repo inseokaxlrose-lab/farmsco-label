@@ -45,6 +45,9 @@ namespace FarmscoLabel.Models
         // 급지 방향 문제로 90도 회전이 필요하면 true
         public bool Rotate90 { get; set; } = false;
 
+        // 품목명 뒤에 "(입수량)"을 표시할지 여부 (true=표시, false=품목명만)
+        public bool ShowBoxUnitQty { get; set; } = true;
+
         // 각 칸의 인쇄 위치. Key는 칸 이름, Value는 위치/글꼴.
         // ※ 아래 좌표는 '기본 추정값'입니다. 실제 양식지에 맞춰 설정 화면에서 조정하세요.
         public Dictionary<string, LabelField> Fields { get; set; } = DefaultFields();

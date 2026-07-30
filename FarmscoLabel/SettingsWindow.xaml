@@ -1,7 +1,7 @@
 <Window x:Class="FarmscoLabel.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="설정" Height="480" Width="460"
+        Title="설정" Height="520" Width="460"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         FontFamily="맑은 고딕" FontSize="13">
 
@@ -36,6 +36,9 @@
             <TextBox x:Name="TxtFont" Margin="0,0,0,12"/>
 
             <CheckBox x:Name="ChkRotate" Content="90도 회전해서 인쇄 (급지 방향이 맞지 않을 때)"
+                      Margin="0,0,0,12"/>
+
+            <CheckBox x:Name="ChkShowBoxUnitQty" Content="품목명 뒤에 (입수량) 표시"
                       Margin="0,0,0,12"/>
         </StackPanel>
 

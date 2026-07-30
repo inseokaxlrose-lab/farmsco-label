@@ -183,7 +183,7 @@ namespace FarmscoLabel
             }
 
             // 선택한 행 1건을 박스별 라벨로 펼침
-            var labels = NumberingEngine.Expand(row, _settings.ShippingSource);
+            var labels = NumberingEngine.Expand(row, _settings.ShippingSource, _settings.ShowBoxUnitQty);
             foreach (var l in labels)
                 _detailLabels.Add(l);
 
@@ -235,7 +235,7 @@ namespace FarmscoLabel
             }
 
             // 라벨로 펼친 뒤 출고 구분 필터 적용
-            var labels = NumberingEngine.ExpandMany(rows, _settings.ShippingSource)
+            var labels = NumberingEngine.ExpandMany(rows, _settings.ShippingSource, _settings.ShowBoxUnitQty)
                 .Where(l => l.IsFullBox ? includeBox : includeLoose)
                 // 박스를 먼저, 낱개를 나중에 출력 (OrderBy는 안정 정렬 → 원래 순서 유지)
                 .OrderByDescending(l => l.IsFullBox)
@@ -331,7 +331,7 @@ namespace FarmscoLabel
             int shown = visible.Count;
 
             // 보이는 행들을 라벨로 펼쳐 박스/낱개 개수를 센다
-            var labels = NumberingEngine.ExpandMany(visible, _settings.ShippingSource);
+            var labels = NumberingEngine.ExpandMany(visible, _settings.ShippingSource, _settings.ShowBoxUnitQty);
             int boxCnt = labels.Count(l => l.IsFullBox);
             int looseCnt = labels.Count(l => !l.IsFullBox);
 

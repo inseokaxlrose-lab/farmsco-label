@@ -22,6 +22,7 @@ namespace FarmscoLabel
             TxtOffsetY.Text = _settings.OffsetYMm.ToString(CultureInfo.InvariantCulture);
             TxtFont.Text = _settings.FontFamily;
             ChkRotate.IsChecked = _settings.Rotate90;
+            ChkShowBoxUnitQty.IsChecked = _settings.ShowBoxUnitQty;
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
@@ -34,6 +35,7 @@ namespace FarmscoLabel
             _settings.OffsetYMm = ParseDouble(TxtOffsetY.Text, _settings.OffsetYMm);
             _settings.FontFamily = string.IsNullOrWhiteSpace(TxtFont.Text) ? "맑은 고딕" : TxtFont.Text.Trim();
             _settings.Rotate90 = ChkRotate.IsChecked == true;
+            _settings.ShowBoxUnitQty = ChkShowBoxUnitQty.IsChecked == true;
 
             DialogResult = true; // 창을 닫으면서 '저장됨'을 알림
         }
